@@ -1,0 +1,54 @@
+{
+  "name": "tld-parse",
+  "version": "1.0.0",
+  "description": "Accurately extracts the subdomain, domain, and public suffix from a URL.",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "browser": "dist/umd/domain-extract.min.js",
+
+  "types": "dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js",
+      "types": "./dist/types/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "rm -rf dist && rollup -c",
+    "test": "jest --verbose",
+    "test:coverage": "jest --coverage",
+    "prepublishOnly": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hoosin/tld-parse.git"
+  },
+  "keywords": [
+    "domain",
+    "extract",
+    "tld",
+    "public-suffix-list",
+    "psl"
+  ],
+  "author": "hoosin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/hoosin/domain-extract/issues"
+  },
+  "homepage": "https://github.com/hoosin/domain-extract#readme",
+  "devDependencies": {
+    "@rollup/plugin-typescript": "^11.0.0",
+    "rollup-plugin-string": "^3.0.0",
+    "rollup": "^3.0.0",
+    "rollup-plugin-dts": "^5.0.0",
+    "tslib": "^2.5.0",
+    "typescript": "^5.0.0",
+    "jest": "^29.5.0",
+    "ts-jest": "^29.0.5",
+    "@types/jest": "^29.5.0"
+  },
+  "files": [
+    "dist"
+  ]
+}
