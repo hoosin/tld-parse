@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>tld-parse Browser (CDN) Example</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
+    h1, h2 { color: #111; }
+    pre { background-color: #f4f4f4; padding: 1em; border-radius: 5px; white-space: pre-wrap; word-wrap: break-word; }
+    #status { font-weight: bold; padding: 0.5em 1em; border-radius: 5px; display: inline-block; margin-bottom: 1rem; }
+    .loading { background-color: #ffc; border: 1px solid #e6c300; }
+    .ready { background-color: #cfc; border: 1px solid #008000; }
+    .error { background-color: #fcc; border: 1px solid #c00; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/tld-parse@3.0.1/dist/umd/domain-extract.min.js"></script>
+</head>
+<body>
+
+  <h1>tld-parse Browser (CDN) Example</h1>
+  <p>This example demonstrates how to use the library directly in a browser by loading it from a CDN.</p>
+
+  <h2>Status</h2>
+  <div id="status" class="loading">Loading TLD list...</div>
+
+  <h2>Results</h2>
+  <div id="results"></div>
+
+  <script>
+    // The UMD build exposes the library on the `window` object.
+    // The global variable name is determined by the build configuration, often matching the filename.
+    const tldParse = window.domainExtract;
+    const statusEl = document.getElementById('status');
+    const resultsEl = document.getElementById('results');
+
+    async function main() {
+      try {
+        if (!tldParse) {
+          throw new Error('The `domainExtract` global variable is not available. Check if the CDN script loaded correctly.');
+        }
+
+        // Step 1: Fetch the Public Suffix List.
+        // For this example to work, `public_suffix_list.dat` must be in the same directory.
+        const response = await fetch('https://publicsuffix.org/list/public_suffix_list.dat');
+        if (!response.ok) {
+          throw new Error(`Failed to fetch TLD list: ${response.statusText}`);
+        }
+        const tldData = await response.text();
+
+        // Step 2: Register the list with the parser.
+        tldParse.register(tldData);
+
+        statusEl.textContent = 'TLD List Ready!';
+        statusEl.className = 'ready';
+
+        // Step 3: Run some examples and display the results.
+        const domainsToTest = [
+          'www.google.com',
+          'forums.bbc.co.uk',
+          'my-project.github.io',
+          'https://sub.example.co.jp/some/path?query=string'
+        ];
+
+        let html = '';
+        for (const domain of domainsToTest) {
+          const result = tldParse(domain);
+          html += `<h3>Input: <code>${domain}</code></h3>`;
+          html += `<pre>${JSON.stringify(result, null, 2)}</pre>`;
+        }
+        resultsEl.innerHTML = html;
+
+      } catch (error) {
+        statusEl.textContent = 'Error!';
+        statusEl.className = 'error';
+        resultsEl.innerHTML = `<pre>Failed to initialize parser: ${error.message}</pre>`;
+        console.error(error);
+      }
+    }
+
+    main();
+  </script>
+
+</body>
+</html>
