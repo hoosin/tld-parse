@@ -4,7 +4,7 @@
   "description": "Accurately extracts the subdomain, domain, and public suffix from a URL.",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
-  "browser": "dist/umd/domain-extract.min.js",
+  "browser": "dist/umd/tld-parse.min.js",
   "types": "dist/types/index.d.ts",
   "exports": {
     ".": {
@@ -33,9 +33,9 @@
   "author": "hoosin",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/hoosin/domain-extract/issues"
+    "url": "https://github.com/hoosin/tld-parse/issues"
   },
-  "homepage": "https://github.com/hoosin/domain-extract#readme",
+  "homepage": "https://github.com/hoosin/tld-parse#readme",
   "devDependencies": {
     "@rollup/plugin-terser": "^0.4.4",
     "@rollup/plugin-typescript": "^11.0.0",

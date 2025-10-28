@@ -1,5 +1,5 @@
 {
-  "name": "domain-extract-example",
+  "name": "tld-parse-example",
   "private": true,
   "version": "0.0.0",
   "type": "module",
