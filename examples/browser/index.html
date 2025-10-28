@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>tld-parse Browser (CDN) Example</title>
   <style>
-    /* === 基础颜色变量 === */
     :root {
       --bg: #f7f9fb;
       --text: #222;
@@ -21,8 +20,6 @@
       --divider: #eee;
       --transition: 0.3s;
     }
-
-    /* 暗色模式 */
     body.dark {
       --bg: #121212;
       --text: #eaeaea;
@@ -31,7 +28,6 @@
       --code-text: #e0e0e0;
       --divider: #333;
     }
-
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background: var(--bg);
@@ -41,7 +37,6 @@
       padding: 0 1.5rem;
       transition: background var(--transition), color var(--transition);
     }
-
     h1 { text-align: center; font-size: 2rem; margin-bottom: 0.5rem; }
     p { text-align: center; opacity: 0.8; margin-bottom: 2rem; }
 
@@ -82,7 +77,6 @@
 
     code { color: #93c5fd; }
 
-    /* 主题切换按钮 */
     .theme-toggle {
       position: fixed; top: 1rem; right: 1rem;
       background: var(--card-bg);
@@ -94,7 +88,6 @@
     }
     .theme-toggle:hover { transform: scale(1.1); }
 
-    /* === VSCode 风格 JSON 高亮 === */
     pre span.key { color: #9cdcfe; }
     pre span.string { color: #ce9178; }
     pre span.number { color: #b5cea8; }
@@ -105,6 +98,13 @@
     footer a { color: var(--accent); text-decoration: none; }
     footer a:hover { text-decoration: underline; }
 
+    form { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; }
+    textarea {
+
+      box-sizing: border-box;
+      width: 100%; height: 100px; padding: 0.5rem 0.8rem; border-radius: var(--radius); border: 1px solid #ccc; font-size: 1rem; font-family: monospace; resize: vertical; }
+    button[type="submit"] { padding: 0.5rem 1rem; border-radius: var(--radius); border: none; background: var(--accent); color: white; cursor: pointer; font-size: 1rem; transition: background 0.2s; }
+    button[type="submit"]:hover { background: #005a9e; }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/tld-parse/dist/umd/tld-parse.min.js"></script>
@@ -136,31 +136,48 @@
   </a>
 </div>
 
+<!-- Status Card -->
 <div class="card">
   <h2>Status</h2>
   <div id="status" class="loading">Loading TLD list...</div>
 </div>
-
+<!-- Input Parsing Card -->
 <div class="card">
-  <h2>Results</h2>
-  <div id="results"></div>
+  <h2>Input Domains (one per line)</h2>
+  <form id="domainForm">
+    <textarea id="domainInput" placeholder="Enter domains or URLs, one per line"></textarea>
+    <button type="submit">Parse</button>
+  </form>
+  <div id="userResults"></div>
 </div>
+
+<!-- Static Examples Card -->
+<div class="card">
+  <h2>Static Results</h2>
+  <div id="staticResults"></div>
+</div>
+
 
 <footer>
   Built with ❤️ using <a href="https://www.npmjs.com/package/tld-parse" target="_blank">tld-parse</a>
 </footer>
 
 <script>
-  const tldParse = window.domainExtract;
+  const tldParse = window.tldParse;
   const statusEl = document.getElementById('status');
-  const resultsEl = document.getElementById('results');
+  const staticEl = document.getElementById('staticResults');
+  const userEl = document.getElementById('userResults');
 
-  // JSON 高亮函数（VSCode 风格）
+  /**
+   * Syntax highlights a JSON object or string.
+   * @param {string|object} json The JSON object or string to highlight.
+   * @returns {string} The HTML string with syntax highlighting.
+   */
   function syntaxHighlight(json) {
     if (typeof json !== 'string') json = JSON.stringify(json, null, 2);
     json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     return json.replace(
-      /("(\\u[\da-fA-F]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|\b-?\d+(\.\d+)?\b)/g,
+      /("(\u[\da-fA-F]{4}|\[^u]|[^\"])*"(\s*:)?|\b(true|false|null)\b|\b-?\d+(\.\d+)?\b)/g,
       match => {
         let cls = 'number';
         if (/^"/.test(match)) cls = /:$/.test(match) ? 'key' : 'string';
@@ -171,9 +188,14 @@
     );
   }
 
-  async function main() {
+  /**
+   * Initializes the TLD parser by fetching the public suffix list
+   * and populating the static examples.
+   * @returns {Promise<void>}
+   */
+  async function initTLD() {
     try {
-      if (!tldParse) throw new Error('`domainExtract` not loaded.');
+      if (!tldParse) throw new Error('`tldParse` not loaded.');
 
       const response = await fetch('https://publicsuffix.org/list/public_suffix_list.dat');
       if (!response.ok) throw new Error(`Failed to fetch TLD list: ${response.statusText}`);
@@ -183,6 +205,7 @@
       statusEl.textContent = '✅ TLD List Ready!';
       statusEl.className = 'ready';
 
+      // Static example results
       const domains = [
         'www.google.com',
         'forums.bbc.co.uk',
@@ -194,27 +217,44 @@
         '8.8.8.8',
         '[2001:db8::1]:8080'
       ];
-
-      resultsEl.innerHTML = domains.map(d => `
-          <h3>Input: <code>${d}</code></h3>
-          <pre>${syntaxHighlight(tldParse(d))}</pre>
-        `).join('');
+      staticEl.innerHTML = domains.map(d => `
+        <h3>Input: <code>${d}</code></h3>
+        <pre>${syntaxHighlight(tldParse(d))}</pre>
+      `).join('');
 
     } catch (err) {
       statusEl.textContent = '❌ Error!';
       statusEl.className = 'error';
-      resultsEl.innerHTML = `<pre>Failed to initialize parser: ${err.message}</pre>`;
+      staticEl.innerHTML = `<pre>Failed to initialize parser: ${err.message}</pre>`;
     }
   }
 
-  main();
+  initTLD();
 
-  // 主题切换逻辑
+  // User input form (supports multi-line batch parsing)
+  const form = document.getElementById('domainForm');
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const value = document.getElementById('domainInput').value.trim();
+    if (!value) return;
+    const lines = value.split('\n').map(l => l.trim()).filter(l => l);
+    if (lines.length === 0) return;
+
+    userEl.innerHTML = lines.map(d => {
+      try {
+        const result = tldParse(d);
+        return `<h3>Input: <code>${d}</code></h3><pre>${syntaxHighlight(result)}</pre>`;
+      } catch (err) {
+        return `<h3>Input: <code>${d}</code></h3><pre>Parsing error: ${err.message}</pre>`;
+      }
+    }).join('');
+  });
+
+  // Theme toggle logic
   const toggleBtn = document.getElementById('themeToggle');
   const userTheme = localStorage.getItem('theme');
   if (userTheme === 'dark') document.body.classList.add('dark');
   toggleBtn.textContent = document.body.classList.contains('dark') ? '🌞' : '🌙';
-
   toggleBtn.addEventListener('click', () => {
     document.body.classList.toggle('dark');
     toggleBtn.textContent = document.body.classList.contains('dark') ? '🌞' : '🌙';
