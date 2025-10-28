@@ -1,5 +1,5 @@
 import { extract, updateSuffixes } from './core/tld';
-import { isIpAddress } from './utils/isIpAddress';
+import { isIpAddress } from './utils';
 import { parseHostname } from './core/parser';
 import ExtractResult from './core/result';
 

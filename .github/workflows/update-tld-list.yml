@@ -11,14 +11,11 @@ on:
 jobs:
   update-list:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # Grant write permission to the GITHUB_TOKEN for this job
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Set up Node.js (for make)
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18' # Or your preferred Node.js version
 
       - name: Download latest public_suffix_list.dat
         run: make all
