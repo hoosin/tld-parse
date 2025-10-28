@@ -14,7 +14,7 @@
     }
   },
   "scripts": {
-    "build": "rm -rf dist && cross-env NODE_ENV=production rollup -c",
+    "build": "rm -rf dist docs && mkdir docs && cross-env NODE_ENV=production rollup -c && cp examples/browser/index.html docs/",
     "test": "jest --verbose",
     "test:coverage": "jest --coverage",
     "prepublishOnly": "npm run build"
