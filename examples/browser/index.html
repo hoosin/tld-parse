@@ -1,93 +1,225 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>tld-parse Browser (CDN) Example</title>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
-    h1, h2 { color: #111; }
-    pre { background-color: #f4f4f4; padding: 1em; border-radius: 5px; white-space: pre-wrap; word-wrap: break-word; }
-    #status { font-weight: bold; padding: 0.5em 1em; border-radius: 5px; display: inline-block; margin-bottom: 1rem; }
-    .loading { background-color: #ffc; border: 1px solid #e6c300; }
-    .ready { background-color: #cfc; border: 1px solid #008000; }
-    .error { background-color: #fcc; border: 1px solid #c00; }
+    /* === 基础颜色变量 === */
+    :root {
+      --bg: #f7f9fb;
+      --text: #222;
+      --card-bg: #ffffff;
+      --code-bg: #1e1e1e;
+      --code-text: #f8f8f2;
+      --accent: #0078d4;
+      --success: #16a34a;
+      --warning: #eab308;
+      --error: #dc2626;
+      --radius: 12px;
+      --shadow: 0 4px 10px rgba(0,0,0,0.08);
+      --divider: #eee;
+      --transition: 0.3s;
+    }
+
+    /* 暗色模式 */
+    body.dark {
+      --bg: #121212;
+      --text: #eaeaea;
+      --card-bg: #1e1e1e;
+      --code-bg: #282c34;
+      --code-text: #e0e0e0;
+      --divider: #333;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      max-width: 900px;
+      margin: 3rem auto;
+      padding: 0 1.5rem;
+      transition: background var(--transition), color var(--transition);
+    }
+
+    h1 { text-align: center; font-size: 2rem; margin-bottom: 0.5rem; }
+    p { text-align: center; opacity: 0.8; margin-bottom: 2rem; }
+
+    .badges { text-align: center; margin-bottom: 2rem; }
+    .badges a { display: inline-block; text-decoration: none; margin: 0.3rem; transition: transform 0.2s ease; }
+    .badges a:hover { transform: translateY(-2px); }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      transition: background var(--transition), box-shadow var(--transition);
+    }
+
+    #status { display: inline-block; padding: 0.6em 1em; border-radius: var(--radius); font-weight: bold; }
+    .loading { background: #fff8cc; border: 1px solid var(--warning); color: #a16207; }
+    .ready { background: #dcfce7; border: 1px solid var(--success); color: #166534; }
+    .error { background: #fee2e2; border: 1px solid var(--error); color: #991b1b; }
+
+    h2 { border-bottom: 2px solid var(--divider); padding-bottom: 0.5rem; margin-top: 1rem; }
+    h3 { margin-top: 1.5rem; font-size: 1.1rem; }
+
+    pre {
+      background: var(--code-bg);
+      color: var(--code-text);
+      border-radius: var(--radius);
+      padding: 1rem 1.2rem;
+      font-family: "JetBrains Mono", "Fira Code", monospace;
+      font-size: 0.9rem;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      border: 1px solid #333;
+      box-shadow: inset 0 0 5px rgba(0,0,0,0.3);
+      transition: background var(--transition), color var(--transition);
+    }
+
+    code { color: #93c5fd; }
+
+    /* 主题切换按钮 */
+    .theme-toggle {
+      position: fixed; top: 1rem; right: 1rem;
+      background: var(--card-bg);
+      border: none; border-radius: 50%;
+      width: 42px; height: 42px;
+      cursor: pointer; font-size: 20px;
+      transition: background var(--transition), transform 0.2s;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    .theme-toggle:hover { transform: scale(1.1); }
+
+    /* === VSCode 风格 JSON 高亮 === */
+    pre span.key { color: #9cdcfe; }
+    pre span.string { color: #ce9178; }
+    pre span.number { color: #b5cea8; }
+    pre span.boolean { color: #569cd6; }
+    pre span.null { color: #569cd6; }
+
+    footer { text-align: center; margin-top: 3rem; font-size: 0.9rem; opacity: 0.7; }
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/tld-parse@3.0.1/dist/umd/domain-extract.min.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/tld-parse/dist/umd/domain-extract.min.js"></script>
 </head>
 <body>
+<button class="theme-toggle" id="themeToggle" title="Toggle Theme">🌙</button>
 
-<h1>tld-parse Browser (CDN) Example</h1>
-<p>This example demonstrates how to use the library directly in a browser by loading it from a CDN.</p>
+<h1>🌐 tld-parse Browser Example</h1>
+<p>Test <strong>tld-parse</strong> directly in your browser — powered by CDN & Public Suffix List.</p>
 
-<h2>Status</h2>
-<div id="status" class="loading">Loading TLD list...</div>
+<div class="badges">
+  <a href="https://www.npmjs.com/package/tld-parse" target="_blank">
+    <img src="https://img.shields.io/npm/v/tld-parse.svg?color=blue" alt="npm version" />
+  </a>
+  <a href="https://www.npmjs.com/package/tld-parse" target="_blank">
+    <img src="https://img.shields.io/npm/dm/tld-parse.svg?color=green" alt="downloads" />
+  </a>
+  <a href="https://github.com/hoosin/tld-parse" target="_blank">
+    <img src="https://img.shields.io/github/stars/hoosin/tld-parse?style=social" alt="GitHub stars" />
+  </a>
+  <a href="https://github.com/hoosin/tld-parse/blob/main/LICENSE" target="_blank">
+    <img src="https://img.shields.io/github/license/hoosin/tld-parse?color=blueviolet" alt="license" />
+  </a>
+  <a href="https://bundlephobia.com/package/tld-parse" target="_blank">
+    <img src="https://img.shields.io/bundlephobia/minzip/tld-parse?label=minzipped%20size" alt="bundle size" />
+  </a>
+  <a href="https://www.typescriptlang.org/" target="_blank">
+    <img src="https://img.shields.io/badge/TypeScript-Ready-3178C6?logo=typescript&logoColor=white" alt="TypeScript Ready" />
+  </a>
+</div>
 
-<h2>Results</h2>
-<div id="results"></div>
+<div class="card">
+  <h2>Status</h2>
+  <div id="status" class="loading">Loading TLD list...</div>
+</div>
+
+<div class="card">
+  <h2>Results</h2>
+  <div id="results"></div>
+</div>
+
+<footer>
+  Built with ❤️ using <a href="https://www.npmjs.com/package/tld-parse" target="_blank">tld-parse</a>
+</footer>
 
 <script>
-  // The UMD build exposes the library on the `window` object.
-  // The global variable name is determined by the build configuration, often matching the filename.
   const tldParse = window.domainExtract;
   const statusEl = document.getElementById('status');
   const resultsEl = document.getElementById('results');
 
+  // JSON 高亮函数（VSCode 风格）
+  function syntaxHighlight(json) {
+    if (typeof json !== 'string') json = JSON.stringify(json, null, 2);
+    json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return json.replace(
+      /("(\\u[\da-fA-F]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|\b-?\d+(\.\d+)?\b)/g,
+      match => {
+        let cls = 'number';
+        if (/^"/.test(match)) cls = /:$/.test(match) ? 'key' : 'string';
+        else if (/true|false/.test(match)) cls = 'boolean';
+        else if (/null/.test(match)) cls = 'null';
+        return `<span class="${cls}">${match}</span>`;
+      }
+    );
+  }
+
   async function main() {
     try {
-      if (!tldParse) {
-        throw new Error('The `domainExtract` global variable is not available. Check if the CDN script loaded correctly.');
-      }
+      if (!tldParse) throw new Error('`domainExtract` not loaded.');
 
-      // Step 1: Fetch the Public Suffix List.
-      // For this example to work, `public_suffix_list.dat` must be in the same directory.
       const response = await fetch('https://publicsuffix.org/list/public_suffix_list.dat');
-      if (!response.ok) {
-        throw new Error(`Failed to fetch TLD list: ${response.statusText}`);
-      }
+      if (!response.ok) throw new Error(`Failed to fetch TLD list: ${response.statusText}`);
       const tldData = await response.text();
-
-      // Step 2: Register the list with the parser.
       tldParse.register(tldData);
 
-      statusEl.textContent = 'TLD List Ready!';
+      statusEl.textContent = '✅ TLD List Ready!';
       statusEl.className = 'ready';
 
-      // Step 3: Run some examples and display the results.
-      const domainsToTest = [
+      const domains = [
         'www.google.com',
-        'google.com:8080',
         'forums.bbc.co.uk',
         'https://sub.example.co.jp/some/path?query=string',
-        'my-project.github.io', // Private domain
-        'sub.www.ck',             // Exception rule `!www.ck`
-        'sub.foo.ck',             // Wildcard rule `*.ck`
-        'localhost',              // Special hostname
-        '192.168.1.1',            // IPv4 address
-        '8.8.8.8',                // Public IPv4 address
-        '::1',                    // IPv6 localhost
-        '2001:0db8:85a3:0000:0000:8a2e:0370:7334', // Full IPv6 address
-        '[2001:db8::1]:8080'      // IPv6 address with port
+        'my-project.github.io',
+        'sub.foo.ck',
+        'localhost',
+        '192.168.1.1',
+        '8.8.8.8',
+        '[2001:db8::1]:8080'
       ];
 
-      let html = '';
-      for (const domain of domainsToTest) {
-        const result = tldParse(domain);
-        html += `<h3>Input: <code>${domain}</code></h3>`;
-        html += `<pre>${JSON.stringify(result, null, 2)}</pre>`;
-      }
-      resultsEl.innerHTML = html;
+      resultsEl.innerHTML = domains.map(d => `
+          <h3>Input: <code>${d}</code></h3>
+          <pre>${syntaxHighlight(tldParse(d))}</pre>
+        `).join('');
 
-    } catch (error) {
-      statusEl.textContent = 'Error!';
+    } catch (err) {
+      statusEl.textContent = '❌ Error!';
       statusEl.className = 'error';
-      resultsEl.innerHTML = `<pre>Failed to initialize parser: ${error.message}</pre>`;
-      console.error(error);
+      resultsEl.innerHTML = `<pre>Failed to initialize parser: ${err.message}</pre>`;
     }
   }
 
   main();
-</script>
 
+  // 主题切换逻辑
+  const toggleBtn = document.getElementById('themeToggle');
+  const userTheme = localStorage.getItem('theme');
+  if (userTheme === 'dark') document.body.classList.add('dark');
+  toggleBtn.textContent = document.body.classList.contains('dark') ? '🌞' : '🌙';
+
+  toggleBtn.addEventListener('click', () => {
+    document.body.classList.toggle('dark');
+    toggleBtn.textContent = document.body.classList.contains('dark') ? '🌞' : '🌙';
+    localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
+  });
+</script>
 </body>
 </html>
