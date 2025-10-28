@@ -1,5 +1,16 @@
-import suffixes from './suffixes';
+import { Suffixes } from './suffixes';
+import initialTld from '../../data/public_suffix_list.dat';
 import IExtractResult from './result';
+
+let suffixes = new Suffixes(initialTld);
+
+/**
+ * Updates the suffix data used by the parser.
+ * @param {string} tldData - The new suffix data string.
+ */
+export function updateSuffixes(tldData: string) {
+  suffixes = new Suffixes(tldData);
+}
 
 /**
  * Finds the longest matching rule for a given domain.

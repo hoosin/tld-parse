@@ -1,18 +1,17 @@
-import tld from '../../data/public_suffix_list.dat';
-
 /**
  * @class Suffixes
  * @description Manages the public and private suffix lists for domain parsing.
  */
-class Suffixes {
+export class Suffixes {
   private readonly publicSuffixes: Set<string>;
   private readonly privateSuffixes: Set<string>;
 
   /**
    * Initializes the Suffixes by loading and parsing the suffix data.
+   * @param {string} tldData - The raw string data of the public suffix list.
    */
-  constructor() {
-    const [publicPart, privatePart] = tld.split('===BEGIN PRIVATE DOMAINS===');
+  constructor(tldData: string) {
+    const [publicPart, privatePart] = tldData.split('===BEGIN PRIVATE DOMAINS===');
     this.publicSuffixes = this.parsePart(publicPart);
     this.privateSuffixes = this.parsePart(privatePart);
   }
@@ -24,6 +23,9 @@ class Suffixes {
    * @private
    */
   private parsePart(part: string): Set<string> {
+    if (!part) {
+      return new Set();
+    }
     return new Set(
       part
         .split('\n')
@@ -49,5 +51,3 @@ class Suffixes {
     return this.privateSuffixes.has(rule);
   }
 }
-
-export default new Suffixes();

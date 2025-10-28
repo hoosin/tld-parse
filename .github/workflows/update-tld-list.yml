@@ -1,0 +1,41 @@
+# This workflow automatically updates the public_suffix_list.dat file.
+
+name: Update Public Suffix List
+
+on:
+  schedule:
+    # Runs every Sunday at 03:00 UTC to minimize server load during peak hours.
+    - cron: '0 3 * * 0'
+  workflow_dispatch: # Allows you to trigger this workflow manually from the Actions tab
+
+jobs:
+  update-list:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js (for make)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18' # Or your preferred Node.js version
+
+      - name: Download latest public_suffix_list.dat
+        run: make all
+
+      - name: Commit and push if there are changes
+        run: |
+          # Configure git for the bot
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+
+          # Add the updated file to the staging area
+          git add data/public_suffix_list.dat
+
+          # Commit and push only if there are actual changes
+          if ! git diff --staged --quiet; then
+            git commit -m "Scheduled Update: Refresh public_suffix_list.dat"
+            git push
+          else
+            echo "Public Suffix List is already up-to-date. No changes to commit."
+          fi

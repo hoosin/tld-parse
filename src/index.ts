@@ -1,9 +1,7 @@
-import { extract } from './core/tld';
+import { extract, updateSuffixes } from './core/tld';
 import { isIpAddress } from './utils/isIpAddress';
 import { parseHostname } from './core/parser';
 import ExtractResult from './core/result';
-
-
 
 /**
  * Extracts domain parts from a single domain string.
@@ -32,20 +30,23 @@ function extractSingle(domain: string): ExtractResult | null {
   return extract(hostnameForExtraction);
 }
 
-/**
- * Extracts the subdomain, domain, and suffix from a given domain string or an array of domain strings.
- * Handles domain names, URLs, and IP addresses.
- *
- * @param {string | string[]} domain - The domain string or array of strings to parse.
- * @returns {ExtractResult | null | (ExtractResult | null)[]} The parsed domain parts.
- */
-export default function tldParse(domain: string): ExtractResult | null;
-export default function tldParse(domain: string[]): (ExtractResult | null)[];
-export default function tldParse(domain: string | string[]): ExtractResult | null | (ExtractResult | null)[] {
+// Define the main function with overloads
+function tldParse(domain: string): ExtractResult | null;
+function tldParse(domain: string[]): (ExtractResult | null)[];
+function tldParse(domain: string | string[]): ExtractResult | null | (ExtractResult | null)[] {
   if (Array.isArray(domain)) {
     return domain.map(extractSingle);
   }
   return extractSingle(domain);
 }
+
+// Attach the register method to the main function
+tldParse.register = (tldData: string) => {
+  updateSuffixes(tldData);
+};
+
 // Make the result type available to consumers of the library.
-export { ExtractResult }
+export { ExtractResult };
+
+// Export the main function as default
+export default tldParse;

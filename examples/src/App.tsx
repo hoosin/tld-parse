@@ -2,15 +2,20 @@ import { useState } from 'react'
 import tldParse, { ExtractResult } from 'tld-parse'
 import './App.css'
 
+// Import the raw text content of the .dat file using Vite's `?raw` suffix
+import tldData from '../../data/test.dat?raw';
+
+// Register the TLD list synchronously on module load
+tldParse.register(tldData);
+
 function App() {
   const [input, setInput] = useState('https://www.forums.bbc.co.uk')
   const [result, setResult] = useState<ExtractResult | null | (ExtractResult | null)[]>(null)
 
   const handleExtract = () => {
-    // Example of handling both single and array inputs
     const isArray = input.includes(',');
     const data = isArray ? input.split(',').map(s => s.trim()) : input;
-    const extracted = tldParse(data as any); // Use 'as any' to satisfy TypeScript with dual-purpose input
+    const extracted = tldParse(data as string);
     setResult(extracted)
   }
 

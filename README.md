@@ -16,7 +16,7 @@ Unlike naive string splitting methods that often fail with complex TLDs (e.g., `
 -   **Accurate Parsing**: Utilizes the Public Suffix List for precise domain component extraction.
 -   **Flexible Input**: Supports single domain strings or arrays of domain strings.
 -   **URL & IP Handling**: Correctly processes full URLs, hostnames, and IP addresses (IPv4 & IPv6).
--   **IDN Support**: Handles Internationalized Domain Names (IDNs) by converting them to/from Punycode as needed.
+-   **Custom Suffix Lists**: Provides an API to register an updated or custom Public Suffix List at runtime.
 -   **TypeScript First**: Written in TypeScript, providing strong typing and excellent developer experience.
 -   **Universal Compatibility**: Works seamlessly in Node.js and browser environments.
 
@@ -36,7 +36,7 @@ npm install --save tld-parse
 The `tldParse` function accepts a single string (URL or hostname) and returns an object containing `subdomain`, `domain`, `suffix`, and `isPrivate` properties, or `null` for invalid inputs.
 
 ```ts
-import tldParse, { TldParseResult } from 'tld-parse';
+import tldParse, { ExtractResult } from 'tld-parse';
 
 // Example 1: Simple Domain
 const result1 = tldParse('www.google.com');
@@ -96,7 +96,7 @@ console.log(result5); // null
 Pass an array of domain strings to `tldParse` to get an array of results.
 
 ```ts
-import tldParse, { TldParseResult } from 'tld-parse';
+import tldParse, { ExtractResult } from 'tld-parse';
 
 const domains = [
   'www.google.com',
@@ -117,10 +117,55 @@ console.log(results);
 */
 ```
 
+## Advanced Usage
+
+### Updating the Public Suffix List
+
+`tld-parse` comes bundled with a version of the Public Suffix List. However, this list is updated regularly. If you need to use the absolute latest version of the list without waiting for a new release of this library, you can provide your own list using the `tldParse.register()` method.
+
+The `register` method accepts the full text content of the `public_suffix_list.dat` file as a single string.
+
+#### Example in Node.js
+
+You can read the file from your disk and register it.
+
+```ts
+import tldParse from 'tld-parse';
+import * as fs from 'fs';
+import * as path from 'path';
+
+// Load the latest list from a file
+const tldData = fs.readFileSync(path.join(__dirname, 'public_suffix_list.dat'), 'utf-8');
+
+// Register it with the parser
+tldParse.register(tldData);
+
+// Now, tldParse will use your provided list
+const result = tldParse('www.newly-added-suffix.com');
+```
+
+#### Example with a Modern Bundler (Vite, etc.)
+
+If you are using a modern bundler like Vite, you can often import the raw text content of a file directly.
+
+```ts
+import tldParse from 'tld-parse';
+
+// Import the raw text content of the .dat file
+// The `?raw` suffix is a Vite-specific feature. Other bundlers may have similar mechanisms.
+import tldData from './path/to/public_suffix_list.dat?raw';
+
+// Register the TLD list synchronously on module load
+tldParse.register(tldData);
+
+// Ready to use!
+const result = tldParse('www.google.com');
+```
+
 ## API Reference
 
-### `tldParse(domain: string): TldParseResult | null`
-### `tldParse(domains: string[]): (TldParseResult | null)[]`
+### `tldParse(domain: string): ExtractResult | null`
+### `tldParse(domains: string[]): (ExtractResult | null)[]`
 
 The main function to extract domain components.
 
@@ -128,13 +173,13 @@ The main function to extract domain components.
 -   `domains`: An array of strings, each representing a URL, hostname, or IP address.
 
 Returns:
--   For single string input: An object of type `TldParseResult` or `null` if the input is invalid.
--   For array input: An array of `TldParseResult | null` objects, corresponding to each input string.
+-   For single string input: An object of type `ExtractResult` or `null` if the input is invalid.
+-   For array input: An array of `ExtractResult | null` objects, corresponding to each input string.
 
-#### `interface TldParseResult`
+#### `interface ExtractResult`
 
 ```ts
-interface TldParseResult {
+interface ExtractResult {
   /**
    * The subdomain part of the domain.
    * e.g., for 'www.google.com', it is 'www'.
