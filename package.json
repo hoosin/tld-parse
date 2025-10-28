@@ -1,11 +1,10 @@
 {
   "name": "tld-parse",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Accurately extracts the subdomain, domain, and public suffix from a URL.",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
   "browser": "dist/umd/domain-extract.min.js",
-
   "types": "dist/types/index.d.ts",
   "exports": {
     ".": {
