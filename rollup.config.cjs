@@ -7,45 +7,77 @@ const packageJson = require('./package.json');
 
 const isProd = process.env.NODE_ENV === 'production';
 
-const basePlugins = [
-  string({
-    include: '**/*.dat',
-  }),
-  typescript({ tsconfig: './tsconfig.json' }),
-];
+// Common plugins
+const tsPlugin = typescript({ tsconfig: './tsconfig.json' });
+const stringPlugin = string({ include: '**/*.dat' });
 
-const umdPlugins = [
-  // We only want to minify the UMD build for production
-  isProd && terser(),
-].filter(Boolean);
+// Main build (with data)
+const mainBuild = {
+  input: 'src/index.ts',
+  plugins: [tsPlugin, stringPlugin],
+  output: [
+    {
+      file: packageJson.main, // dist/cjs/index.js
+      format: 'cjs',
+      sourcemap: true,
+    },
+    {
+      file: packageJson.module, // dist/esm/index.js
+      format: 'esm',
+      sourcemap: true,
+    },
+    {
+      file: packageJson.browser, // dist/umd/tld-parse.min.js
+      format: 'umd',
+      name: 'tldParse',
+      sourcemap: true,
+      plugins: [isProd && terser()].filter(Boolean), // Minify only UMD
+    },
+  ],
+};
 
-module.exports = [
-  {
-    input: 'src/index.ts',
-    output: [
-      {
-        file: packageJson.main,
-        format: 'cjs',
-        sourcemap: true,
-      },
-      {
-        file: packageJson.module,
-        format: 'esm',
-        sourcemap: true,
-      },
-      {
-        file: packageJson.browser,
-        format: 'umd',
-        name: 'tldParse',
-        sourcemap: true,
-      },
-    ],
-    plugins: [...basePlugins, ...umdPlugins],
-  },
+// Core build (no data)
+const coreBuild = {
+  input: 'src/core.ts',
+  plugins: [tsPlugin], // No string plugin
+  output: [
+    {
+      file: 'dist/cjs/core.js',
+      format: 'cjs',
+      sourcemap: true,
+    },
+    {
+      file: 'dist/esm/core.js',
+      format: 'esm',
+      sourcemap: true,
+    },
+    {
+      file: 'dist/umd/tld-parse.core.min.js',
+      format: 'umd',
+      name: 'tldParse',
+      sourcemap: true,
+      plugins: [isProd && terser()].filter(Boolean), // Minify only UMD
+    },
+  ],
+};
+
+// DTS bundling
+const dtsBuilds = [
   {
     input: 'dist/esm/index.d.ts',
     output: [{ file: 'dist/types/index.d.ts', format: 'esm' }],
     plugins: [dts()],
-    external: ['./core/tld.dat'],
+    external: [/\.dat$/],
   },
+  {
+    input: 'dist/esm/core.d.ts',
+    output: [{ file: 'dist/types/core.d.ts', format: 'esm' }],
+    plugins: [dts()],
+  },
+];
+
+module.exports = [
+  mainBuild,
+  coreBuild,
+  ...dtsBuilds,
 ];

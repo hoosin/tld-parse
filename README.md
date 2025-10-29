@@ -19,6 +19,7 @@ Unlike naive string splitting methods that often fail with complex TLDs (e.g., `
 -   **Custom Suffix Lists**: Provides an API to register an updated or custom Public Suffix List at runtime.
 -   **TypeScript First**: Written in TypeScript, providing strong typing and excellent developer experience.
 -   **Universal Compatibility**: Works seamlessly in Node.js and browser environments.
+-   **Lightweight Core**: An optional `core` entrypoint allows for a smaller bundle size by omitting the bundled Public Suffix List, giving users full control over data loading.
 
 ## Install
 
@@ -37,6 +38,9 @@ The `tldParse` function accepts a single string (URL or hostname) and returns an
 
 ```ts
 import tldParse, { ExtractResult } from 'tld-parse';
+
+// The default import of `tld-parse` comes with the Public Suffix List bundled.
+// No need to call tldParse.register() for basic usage.
 
 // Example 1: Simple Domain
 const result1 = tldParse('www.google.com');
@@ -119,9 +123,9 @@ console.log(results);
 
 ## Advanced Usage
 
-### Updating the Public Suffix List
+### Updating the Bundled Public Suffix List (Default Import)
 
-`tld-parse` comes bundled with a version of the Public Suffix List. However, this list is updated regularly. If you need to use the absolute latest version of the list without waiting for a new release of this library, you can provide your own list using the `tldParse.register()` method.
+The default `tld-parse` import comes with a bundled version of the Public Suffix List. You **do not need to call `tldParse.register()` for basic usage**. However, this list is updated regularly. If you need to use the absolute latest version of the list without waiting for a new release of this library, or if you want to use a custom list, you can provide your own list using the `tldParse.register()` method.
 
 The `register` method accepts the full text content of the `public_suffix_list.dat` file as a single string.
 
@@ -137,7 +141,7 @@ import * as path from 'path';
 // Load the latest list from a file
 const tldData = fs.readFileSync(path.join(__dirname, 'public_suffix_list.dat'), 'utf-8');
 
-// Register it with the parser
+// Register it with the parser (this will replace the bundled list)
 tldParse.register(tldData);
 
 // Now, tldParse will use your provided list
@@ -155,11 +159,48 @@ import tldParse from 'tld-parse';
 // The `?raw` suffix is a Vite-specific feature. Other bundlers may have similar mechanisms.
 import tldData from './path/to/public_suffix_list.dat?raw';
 
-// Register the TLD list synchronously on module load
+// Register the TLD list synchronously on module load (this will replace the bundled list)
 tldParse.register(tldData);
 
 // Ready to use!
 const result = tldParse('www.google.com');
+```
+
+### Using the Core Version (without bundled Public Suffix List)
+
+For scenarios where bundle size is critical, or you prefer to manage the Public Suffix List data entirely yourself, you can import the `core` version of `tld-parse`. This version does not include the `public_suffix_list.dat` file, making it significantly smaller.
+
+**Important**: When using the `core` version, you **must** call `tldParse.register(tldData)` with your own Public Suffix List data before attempting to parse any domains. Failure to do so will result in a runtime error.
+
+```ts
+// Import the core version
+import tldParse from 'tld-parse/core';
+
+// --- You MUST load and register the Public Suffix List data yourself ---
+// Example: Fetching from publicsuffix.org (browser environment)
+async function initializeParser() {
+  try {
+    const response = await fetch('https://publicsuffix.org/list/public_suffix_list.dat');
+    if (!response.ok) {
+      throw new Error(`Failed to fetch TLD list: ${response.statusText}`);
+    }
+    const tldData = await response.text();
+    tldParse.register(tldData);
+    console.log('TLD parser core initialized with custom data.');
+
+    // Now you can use tldParse
+    const result = tldParse('www.example.com');
+    console.log(result);
+
+  } catch (error) {
+    console.error('Error initializing TLD parser core:', error);
+  }
+}
+
+initializeParser();
+
+// Attempting to parse before registering will throw an error:
+// tldParse('test.com'); // This would throw an error if called before register
 ```
 
 ## API Reference

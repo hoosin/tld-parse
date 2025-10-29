@@ -1,8 +1,7 @@
 import { Suffixes } from './suffixes';
-import initialTld from '../../data/public_suffix_list.dat';
 import IExtractResult from './result';
 
-let suffixes = new Suffixes(initialTld);
+let suffixes = new Suffixes('');
 
 /**
  * Updates the suffix data used by the parser.
@@ -47,6 +46,12 @@ function findLongestMatch(domainParts: string[]): { suffix: string; rule: string
  * @returns {IExtractResult} An object containing the parts of the domain.
  */
 export function extract(domain: string): IExtractResult {
+  if (suffixes.getRules().size === 0) {
+    throw new Error(
+      'Suffix list is not loaded. Please use `tldParse.register(tldData)` to load the Public Suffix List before parsing. If you want a version with the list built-in, use the default import instead of `tld-parse/core`.'
+    );
+  }
+
   const domainParts = domain.toLowerCase().split('.').filter(Boolean);
   const match = findLongestMatch(domainParts);
 
