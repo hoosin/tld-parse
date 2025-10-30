@@ -1,12 +1,6 @@
 import { useState } from 'react'
-import tldParse, { ExtractResult } from 'tld-parse'
+import tldParse, { ExtractResult } from '../../../dist/esm'
 import './App.css'
-
-// Import the raw text content of the .dat file using Vite's `?raw` suffix
-import tldData from '../../data/test.dat?raw';
-
-// Register the TLD list synchronously on module load
-tldParse.register(tldData);
 
 function App() {
   const [input, setInput] = useState('https://www.forums.bbc.co.uk')

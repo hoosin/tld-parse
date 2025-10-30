@@ -2,6 +2,10 @@ import { extract, updateSuffixes } from './core/tld';
 import { isIpAddress } from './utils';
 import { parseHostname } from './core/parser';
 import ExtractResult from './core/result';
+import initialTld from '../data/public_suffix_list.dat';
+
+// Initialize the suffix list immediately for the non-core version
+updateSuffixes(initialTld);
 
 /**
  * Extracts domain parts from a single domain string.
